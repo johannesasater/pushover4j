@@ -1,11 +1,14 @@
 package net.pushover.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -13,6 +16,9 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 
@@ -66,7 +72,23 @@ public class PushoverRestClient implements PushoverClient {
 			addPairIfNotNull(nvps, "priority", msg.getPriority());
 		}
 
-		post.setEntity(new UrlEncodedFormEntity(nvps, Charset.defaultCharset()));
+		if (msg.getImage() != null) {
+			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+			builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+
+			InputStream inputStream = new ByteArrayInputStream(msg.getImage());
+			builder.addBinaryBody("attachment", inputStream, ContentType.create("image/jpeg"), "image.jpg");
+
+			for (NameValuePair nameValuePair : nvps) {
+				builder.addTextBody(nameValuePair.getName(), nameValuePair.getValue(), ContentType.TEXT_PLAIN);
+			}
+
+			HttpEntity entity = builder.build();
+			post.setEntity(entity);
+
+		} else {
+			post.setEntity(new UrlEncodedFormEntity(nvps, Charset.defaultCharset()));
+		}
 
 		try {
 			HttpResponse response = httpClient.execute(post);

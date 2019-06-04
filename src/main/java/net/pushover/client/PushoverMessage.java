@@ -30,6 +30,8 @@ public class PushoverMessage {
 
 	private String sound;
 
+	private byte[] image;
+
 	private PushoverMessage() {
 		// use the builder
 	}
@@ -141,6 +143,11 @@ public class PushoverMessage {
 			msg.sound = sound;
 			return this;
 		}
+
+		public Builder setImage(byte[] image) {
+			msg.image = image;
+			return this;
+		}
 	}
 
 	public String getApiToken() {
@@ -185,6 +192,10 @@ public class PushoverMessage {
 
 	public String getHtmlMessage() {
 		return htmlMessage;
+	}
+
+	public byte[] getImage() {
+		return image;
 	}
 
 }
